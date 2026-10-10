@@ -35,6 +35,55 @@ so this was a backend-only fix.
 Without these two variables, avatar/photo uploads return a clear error —
 everything else in the app is unaffected.
 
+## 🛡️ v6.9.0 — bug audit, security fix, animation polish
+
+Did a real audit of the existing code instead of just adding more
+features. Checked the highest-stakes logic first — the balance engine
+and split calculator — and they hold up (the split service already uses
+the largest-remainder method for paise-exact rounding; no divide-by-zero
+paths; the balance math correctly nets expenses against completed
+settlements). The two real bugs were elsewhere:
+
+**1. Socket.IO connection survived logout (real identity bug).** The
+shared real-time connection authenticates once, at handshake, with
+whatever JWT was in `localStorage` at that moment. `disconnectSocket()`
+existed in `lib/socket.ts` but was **never called anywhere** — both
+logout buttons just cleared the token and navigated away, leaving the
+old connection alive and still authenticated as the previous user. If a
+second person logged in on the same browser without a hard refresh,
+their real-time squad updates and `join-squad` requests would run
+through the *first* person's socket. Fixed at the single source of
+truth (`auth.ts → logout()`), so any caller gets correct cleanup.
+
+**2. Expired sessions had no handling.** A 401 (JWT expiry, rotated
+secret) was treated like any other API error — the user would see a
+cryptic message on whatever screen they were on, with the app stuck
+half-loaded, instead of being sent back to login. `api()` now detects a
+401 on any non-login call, clears the stale token, and redirects to
+`/login`. (A hard redirect also resets the socket singleton as a free
+side effect, complementing fix #1 for the expiry path, where there's no
+logout button click to hook into.)
+
+**Side effect worth noting:** because logout now loads the socket module
+via dynamic `import()`, Vite splits `socket.io-client` (42KB) into its
+own lazy chunk instead of the main bundle.
+
+**Animations (this re-applies v6.8.1, which was built but never pushed):**
+- `lib/motion.ts` — shared motion presets (`sheetSpring`, `popSpring`,
+  `revealTransition`) replacing five near-identical per-file spring
+  configs; fixes Wrapped's two reveals that used Framer Motion's bare
+  default spring (noticeably bouncy/game-like).
+- **New: page-entry fade on every route.** Pages used to pop in
+  abruptly. Deliberately **opacity-only** — animating `y`/`scale` on a
+  wrapper would apply a CSS transform, which makes every `position:
+  fixed` descendant (the bottom nav, FABs, modals) position relative to
+  the wrapper instead of the viewport for the animation's duration,
+  causing a visible jump when it ends. Opacity doesn't create that
+  containing block.
+- `GlobalNav.tsx` converted from inline `style={{}}` color objects to
+  real Tailwind utilities (`text-bone`, `bg-ink-900`, `border-bone/15`);
+  only its two gradients stay inline.
+
 ## 🧭 v6.8.0 — global bottom navigation (Dashboard)
 
 Requested: a persistent bottom nav (Home / Squads / + / Vault / Trips /

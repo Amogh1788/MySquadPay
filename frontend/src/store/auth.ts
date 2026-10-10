@@ -72,6 +72,15 @@ export const useAuth = create<AuthState>((set) => ({
   logout() {
     localStorage.removeItem('squadpay_token');
     set({ user: null });
+    // The shared Socket.IO connection authenticates once, at handshake time,
+    // with whatever JWT was in localStorage then. Without this, a second
+    // user logging in on the same browser (no hard refresh) would have
+    // their real-time squad updates running through the FIRST user's
+    // still-connected, still-authenticated socket — a real identity bug,
+    // not just a stale-connection one. Dynamic import avoids a hard
+    // dependency from the auth store on the realtime layer for the (much
+    // more common) case where sockets were never opened this session.
+    import('../lib/socket').then(({ disconnectSocket }) => disconnectSocket()).catch(() => {});
   },
 
   setUser(u) { set({ user: u }); },

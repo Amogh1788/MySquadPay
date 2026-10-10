@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { sheetSpring } from '../lib/motion';
 import { Bell, CheckCheck, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../store/notifications';
@@ -75,7 +76,7 @@ export function NotificationBell({ squadId }: { squadId?: string }) {
               initial={{ y: '100%', opacity: 1 }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 340 }}
+              transition={sheetSpring}
               className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg
                          sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-12 sm:mx-0 sm:w-96"
               style={{

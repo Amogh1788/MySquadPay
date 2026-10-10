@@ -6,6 +6,7 @@ import { api, assetUrl } from '../lib/api';
 import { toRupees } from '../lib/money';
 import { FunLoader } from '../components/ui';
 import { play, initSound } from '../lib/sound';
+import { popSpring } from '../lib/motion';
 
 interface Photo { id: string; url: string; caption: string; uploaderName: string }
 interface W {
@@ -115,7 +116,7 @@ export default function Wrapped() {
 
           {slide.type === 'text' ? (
             <>
-              <motion.div initial={{ scale:0, rotate:-20 }} animate={{ scale:1, rotate:0 }} transition={{ delay:0.15, type:'spring' }} className="text-7xl sm:text-8xl">
+              <motion.div initial={{ scale:0, rotate:-20 }} animate={{ scale:1, rotate:0 }} transition={{ delay:0.15, ...popSpring }} className="text-7xl sm:text-8xl">
                 {slide.emoji}
               </motion.div>
               <motion.p initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.35 }}
@@ -136,7 +137,7 @@ export default function Wrapped() {
           ) : (
             /* PHOTO SLIDE */
             <div className="w-full max-w-sm">
-              <motion.div initial={{ opacity:0, y:20, rotate:-2 }} animate={{ opacity:1, y:0, rotate:0 }} transition={{ delay:0.2, type:'spring' }}
+              <motion.div initial={{ opacity:0, y:20, rotate:-2 }} animate={{ opacity:1, y:0, rotate:0 }} transition={{ delay:0.2, ...popSpring }}
                 className="overflow-hidden rounded-3xl shadow-2xl" style={{ border:'4px solid rgba(255,255,255,0.3)' }}>
                 <img src={assetUrl(slide.photo.url)} alt="memory" decoding="async" className="aspect-square w-full object-cover" />
               </motion.div>

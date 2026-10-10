@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { sheetSpring } from '../lib/motion';
 import { X, QrCode, Smartphone } from 'lucide-react';
 import { api } from '../lib/api';
 import { toRupees } from '../lib/money';
@@ -69,7 +70,7 @@ export default function MemberSheet({ open, onClose, squadId, userId, currentUse
             onClick={onClose} />
 
           <motion.div initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }}
-            transition={{ type:'spring', damping:30, stiffness:340 }}
+            transition={sheetSpring}
             className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg"
             style={{ background:C.card, borderTop:`2px solid ${C.border}`, borderLeft:`2px solid ${C.border}`, borderRight:`2px solid ${C.border}`, borderRadius:'1.5rem 1.5rem 0 0', maxHeight:'88vh', overflowY:'auto', color:C.bone, paddingBottom:'env(safe-area-inset-bottom)' }}>
 

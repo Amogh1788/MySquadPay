@@ -19,7 +19,23 @@ export async function api<T = any>(path: string, options: RequestInit = {}): Pro
     },
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiException(res.status, data.error || 'Something went wrong');
+  if (!res.ok) {
+    if (res.status === 401 && path !== '/auth/login' && path !== '/auth/register') {
+      // Session expired or token invalid (JWT expiry, rotated secret, etc.)
+      // — every other screen would otherwise just show whatever cryptic
+      // error message that endpoint happened to throw, with the app stuck
+      // showing a half-loaded, broken-looking page. A hard redirect clears
+      // the stale token and drops the user cleanly back at login — it also
+      // resets the Socket.IO connection as a side effect, which matters
+      // since sockets authenticate once at handshake and don't otherwise
+      // know the session died.
+      localStorage.removeItem('squadpay_token');
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    throw new ApiException(res.status, data.error || 'Something went wrong');
+  }
   return data as T;
 }
 

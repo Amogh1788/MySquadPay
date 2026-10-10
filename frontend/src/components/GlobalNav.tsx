@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import { sheetSpring } from '../lib/motion';
 import { LayoutGrid, Users, Plus, Landmark, Compass, Menu, X, PlusCircle, KeyRound, Wallet, Moon, Sun, Volume2, VolumeX, LogOut } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../store/auth';
@@ -55,27 +56,17 @@ export default function GlobalNav() {
 
   return (
     <>
-      <nav
-        className="fixed inset-x-0 bottom-0 z-30 sm:hidden"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-      >
-        <div className="mx-3 mb-3 flex items-center justify-between rounded-2xl px-2 py-2"
-          style={{
-            background: 'linear-gradient(180deg, rgba(22,19,16,0.97), rgba(14,12,10,0.99))',
-            border: '1px solid rgba(var(--rt-bone-rgb),0.1)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-          }}>
+      <nav className="fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] sm:hidden">
+        <div className="mx-3 mb-3 flex items-center justify-between rounded-2xl border border-bone/10 px-2 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+          style={{ background: 'linear-gradient(180deg, rgba(22,19,16,0.97), rgba(14,12,10,0.99))' }}>
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             if (item.isFab) {
               return (
                 <button key={item.key} onClick={() => { initSound(); play('tap'); item.onClick(); }}
-                  className="relative -mt-7 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl active:scale-90 transition"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--color-marigold), var(--color-hot-pink))',
-                    boxShadow: '0 6px 20px rgba(255,61,110,0.4)',
-                  }}>
-                  <Icon className="h-6 w-6" style={{ color: '#0e0c0a' }} strokeWidth={2.5} />
+                  className="relative -mt-7 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-[0_6px_20px_rgba(255,61,110,0.4)] transition active:scale-90"
+                  style={{ background: 'linear-gradient(135deg, var(--color-marigold), var(--color-hot-pink))' }}>
+                  <Icon className="h-6 w-6 text-ink-950" strokeWidth={2.5} />
                 </button>
               );
             }
@@ -83,9 +74,8 @@ export default function GlobalNav() {
             return (
               <button key={item.key} onClick={() => { initSound(); play('tap'); item.onClick(); }}
                 className="flex flex-1 flex-col items-center gap-0.5 py-1.5 transition active:scale-95">
-                <Icon className="h-5 w-5" style={{ color: isActive ? 'var(--color-marigold)' : 'rgba(var(--rt-bone-rgb),0.55)' }} />
-                <span className="text-[9px] font-bold uppercase tracking-wide"
-                  style={{ color: isActive ? 'var(--color-marigold)' : 'rgba(var(--rt-bone-rgb),0.45)' }}>
+                <Icon className={`h-5 w-5 ${isActive ? 'text-marigold' : 'text-bone/55'}`} />
+                <span className={`text-[9px] font-bold uppercase tracking-wide ${isActive ? 'text-marigold' : 'text-bone/45'}`}>
                   {item.label}
                 </span>
               </button>
@@ -97,17 +87,17 @@ export default function GlobalNav() {
       {/* SQUADS quick-switcher */}
       <BottomSheet open={sheet === 'squads'} onClose={() => setSheet(null)} title="Tumhare Squads">
         {!squads ? (
-          <p className="py-6 text-center text-sm" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>Loading...</p>
+          <p className="py-6 text-center text-sm text-bone/50">Loading...</p>
         ) : squads.length === 0 ? (
-          <p className="py-6 text-center text-sm" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>Koi squad nahi hai abhi — pehle ek banao ya join karo.</p>
+          <p className="py-6 text-center text-sm text-bone/50">Koi squad nahi hai abhi — pehle ek banao ya join karo.</p>
         ) : (
           <div className="space-y-2">
             {squads.map((s) => (
               <button key={s.id} onClick={() => { rememberLastSquad(s.id); go(`/app/squad/${s.id}`); }}
-                className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition active:scale-[0.98]"
-                style={{ background: 'rgba(var(--rt-bone-rgb),0.05)' }}>
+                className="flex w-full items-center gap-3 rounded-xl bg-bone/5 p-3 text-left transition active:scale-[0.98]"
+               >
                 <span className="text-2xl">{s.emoji}</span>
-                <span className="font-display font-bold text-sm" style={{ color: 'var(--color-bone)' }}>{s.name}</span>
+                <span className="font-display text-sm font-bold text-bone">{s.name}</span>
               </button>
             ))}
           </div>
@@ -117,18 +107,18 @@ export default function GlobalNav() {
       {/* ADD quick actions */}
       <BottomSheet open={sheet === 'add'} onClose={() => setSheet(null)} title="Kya karna hai?">
         <div className="space-y-2">
-          <button onClick={() => go('/app?action=create')} className="flex w-full items-center gap-3 rounded-xl p-3.5 text-left" style={{ background: 'rgba(var(--rt-bone-rgb),0.05)' }}>
-            <PlusCircle className="h-5 w-5" style={{ color: 'var(--color-marigold)' }} />
-            <span className="font-display font-bold text-sm" style={{ color: 'var(--color-bone)' }}>Naya Squad Banao</span>
+          <button onClick={() => go('/app?action=create')} className="flex w-full items-center gap-3 rounded-xl bg-bone/5 p-3.5 text-left">
+            <PlusCircle className="h-5 w-5 text-marigold" />
+            <span className="font-display text-sm font-bold text-bone">Naya Squad Banao</span>
           </button>
-          <button onClick={() => go('/app?action=join')} className="flex w-full items-center gap-3 rounded-xl p-3.5 text-left" style={{ background: 'rgba(var(--rt-bone-rgb),0.05)' }}>
-            <KeyRound className="h-5 w-5" style={{ color: 'var(--color-aqua)' }} />
-            <span className="font-display font-bold text-sm" style={{ color: 'var(--color-bone)' }}>Invite Code se Join Karo</span>
+          <button onClick={() => go('/app?action=join')} className="flex w-full items-center gap-3 rounded-xl bg-bone/5 p-3.5 text-left">
+            <KeyRound className="h-5 w-5 text-aqua" />
+            <span className="font-display text-sm font-bold text-bone">Invite Code se Join Karo</span>
           </button>
           {getLastSquad() && (
-            <button onClick={() => go(`/app/squad/${getLastSquad()}?action=add-expense`)} className="flex w-full items-center gap-3 rounded-xl p-3.5 text-left" style={{ background: 'rgba(var(--rt-bone-rgb),0.05)' }}>
-              <Wallet className="h-5 w-5" style={{ color: 'var(--color-lime)' }} />
-              <span className="font-display font-bold text-sm" style={{ color: 'var(--color-bone)' }}>Kharcha Add Karo</span>
+            <button onClick={() => go(`/app/squad/${getLastSquad()}?action=add-expense`)} className="flex w-full items-center gap-3 rounded-xl bg-bone/5 p-3.5 text-left">
+              <Wallet className="h-5 w-5 text-lime" />
+              <span className="font-display text-sm font-bold text-bone">Kharcha Add Karo</span>
             </button>
           )}
         </div>
@@ -137,26 +127,26 @@ export default function GlobalNav() {
       {/* MORE menu */}
       <BottomSheet open={sheet === 'more'} onClose={() => setSheet(null)} title="More">
         <div className="space-y-2">
-          <button onClick={() => go('/app')} className="flex w-full items-center gap-3 rounded-xl p-3.5 text-left" style={{ background: 'rgba(var(--rt-bone-rgb),0.05)' }}>
-            <Wallet className="h-5 w-5" style={{ color: 'var(--color-lime)' }} />
-            <span className="font-display font-bold text-sm" style={{ color: 'var(--color-bone)' }}>Personal Finance</span>
+          <button onClick={() => go('/app')} className="flex w-full items-center gap-3 rounded-xl bg-bone/5 p-3.5 text-left">
+            <Wallet className="h-5 w-5 text-lime" />
+            <span className="font-display text-sm font-bold text-bone">Personal Finance</span>
           </button>
-          <button onClick={() => { toggleTheme(); }} className="flex w-full items-center justify-between rounded-xl p-3.5" style={{ background: 'rgba(var(--rt-bone-rgb),0.05)' }}>
-            <span className="flex items-center gap-3 font-display font-bold text-sm" style={{ color: 'var(--color-bone)' }}>
+          <button onClick={() => { toggleTheme(); }} className="flex w-full items-center justify-between rounded-xl bg-bone/5 p-3.5">
+            <span className="flex items-center gap-3 font-display text-sm font-bold text-bone">
               {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />} Theme
             </span>
-            <span className="text-xs font-bold" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>{theme === 'dark' ? 'Dark' : 'Light'}</span>
+            <span className="text-xs font-bold text-bone/50">{theme === 'dark' ? 'Dark' : 'Light'}</span>
           </button>
           <button onClick={() => { const v = !soundOn; setSoundOn(v); setSoundEnabled(v); if (v) { initSound(); play('toggle'); } }}
-            className="flex w-full items-center justify-between rounded-xl p-3.5" style={{ background: 'rgba(var(--rt-bone-rgb),0.05)' }}>
-            <span className="flex items-center gap-3 font-display font-bold text-sm" style={{ color: 'var(--color-bone)' }}>
+            className="flex w-full items-center justify-between rounded-xl bg-bone/5 p-3.5">
+            <span className="flex items-center gap-3 font-display text-sm font-bold text-bone">
               {soundOn ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />} Sound
             </span>
-            <span className="text-xs font-bold" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}>{soundOn ? 'On' : 'Off'}</span>
+            <span className="text-xs font-bold text-bone/50">{soundOn ? 'On' : 'Off'}</span>
           </button>
-          <button onClick={() => { logout(); nav('/'); }} className="flex w-full items-center gap-3 rounded-xl p-3.5 text-left" style={{ background: 'rgba(255,61,110,0.08)' }}>
-            <LogOut className="h-5 w-5" style={{ color: 'var(--color-hot-pink)' }} />
-            <span className="font-display font-bold text-sm" style={{ color: 'var(--color-hot-pink)' }}>Logout</span>
+          <button onClick={() => { logout(); nav('/'); }} className="flex w-full items-center gap-3 rounded-xl bg-hot-pink/10 p-3.5 text-left">
+            <LogOut className="h-5 w-5 text-hot-pink" />
+            <span className="font-display text-sm font-bold text-hot-pink">Logout</span>
           </button>
         </div>
       </BottomSheet>
@@ -170,17 +160,13 @@ function BottomSheet({ open, onClose, title, children }: { open: boolean; onClos
       {open && (
         <>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.8)' }} onClick={onClose} />
+            className="fixed inset-0 z-40 bg-black/80" onClick={onClose} />
           <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 340 }}
-            className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg rounded-t-3xl p-5"
-            style={{
-              background: 'var(--color-ink-900)', border: '2px solid rgba(var(--rt-bone-rgb),0.15)', borderBottom: 'none',
-              maxHeight: '75vh', overflowY: 'auto', paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))',
-            }}>
+            transition={sheetSpring}
+            className="fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[75vh] max-w-lg overflow-y-auto rounded-t-3xl border-2 border-b-0 border-bone/15 bg-ink-900 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-display font-extrabold" style={{ color: 'var(--color-bone)' }}>{title}</h3>
-              <button onClick={onClose} className="rounded-lg p-1.5" style={{ color: 'rgba(var(--rt-bone-rgb),0.5)' }}><X className="h-4 w-4" /></button>
+              <h3 className="font-display font-extrabold text-bone">{title}</h3>
+              <button onClick={onClose} className="rounded-lg p-1.5 text-bone/50"><X className="h-4 w-4" /></button>
             </div>
             {children}
           </motion.div>

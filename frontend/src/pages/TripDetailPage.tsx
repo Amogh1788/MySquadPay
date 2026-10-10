@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { sheetSpring } from '../lib/motion';
 import { ArrowLeft, MoreVertical, CheckCircle2, Archive, Trash2, Trophy, Tag, X, Check, Plus } from 'lucide-react';
 import { api, assetUrl } from '../lib/api';
 import { toRupees, timeAgo } from '../lib/money';
@@ -251,7 +252,7 @@ export default function TripDetailPage() {
               className="fixed inset-0 z-40" style={{ background:'rgba(0,0,0,0.75)' }}
               onClick={() => setShowTagModal(false)} />
             <motion.div initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }}
-              transition={{ type:'spring', damping:30, stiffness:340 }}
+              transition={sheetSpring}
               className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg rounded-t-3xl"
               style={{ background:'var(--color-ink-900)', border:'2px solid rgba(var(--rt-bone-rgb),0.15)', borderBottom:'none', maxHeight:'80vh', overflowY:'auto', paddingBottom:'env(safe-area-inset-bottom)' }}>
               <div className="flex justify-center pt-3 pb-1">
