@@ -35,6 +35,47 @@ so this was a backend-only fix.
 Without these two variables, avatar/photo uploads return a clear error —
 everything else in the app is unaffected.
 
+## 📷 v6.10.0 — QR code to join a squad
+
+**How it works:** squad menu (⋮) → **Invite QR** shows a scannable code.
+Anyone scans it with their phone's *normal camera app* → the link opens →
+a confirm screen ("Join 🏖️ Goa Gang? · 5 members") → one tap to join. The QR
+encodes a plain link (`/join/CODE`), not the raw code, which is why no
+in-app scanner, camera permission prompt, or scanning library is needed.
+
+- **Logged-out scanners are handled:** `JoinPage` parks the invite in
+  `sessionStorage`, sends them through login/register, and `Dashboard`
+  routes them back to the confirm screen afterwards.
+- **Scanning never silently joins you** — new `GET /api/squads/preview/:code`
+  (authenticated, registered before the `/:id` wildcard) returns name,
+  emoji, member count, and `alreadyMember` so the page can show what
+  you're about to join (or "Squad kholo" if you're already in).
+- **QR is always dark-on-white** regardless of app theme — an inverted
+  dark-mode QR often won't scan. Library (`qrcode`) is lazy-loaded only
+  when the modal opens; main bundle unchanged.
+- Copy-link and native Share buttons in the modal.
+
+**Verified, not assumed** — tested against a real Postgres 16 + the real
+server (13/13 passing): preview for non-members/members, lowercase codes,
+unknown codes (404), no token (401), join → re-preview, leave → re-scan
+→ rejoin. The QR itself was round-trip tested: generated with the app's
+exact options and decoded back with an independent reader (jsQR) — 4/4
+returned the exact join link.
+
+**Bugs found along the way:**
+- **`schema.sql` was broken for fresh installs (introduced in v6.7).**
+  `treasury_transactions.payment_order_id` references `payment_orders`, but
+  `payment_orders` was defined *later* in the file, so `CREATE TABLE
+  treasury_transactions` failed on a brand-new database (24 of 25 tables
+  created). Existing databases were unaffected — they get these tables via
+  `setup-db.js` in the right order. Found only because this round tested
+  against a real database; fixed by moving `payment_orders`/`payment_events`
+  above their dependent. Fresh-DB load is now 0 errors / 25 tables, and
+  `npm run setup` re-verified clean + idempotent on top of it.
+- **Leave Squad dialog said you'd need a *new* invite code to return.**
+  False — the same code re-activates you (confirmed in the test above).
+  Reworded to "invite code ya QR dobara chahiye hoga".
+
 ## 🛡️ v6.9.0 — bug audit, security fix, animation polish
 
 Did a real audit of the existing code instead of just adding more

@@ -52,6 +52,24 @@ export async function joinSquad(req, res, next) {
   } catch (err) { next(err); }
 }
 
+// Lets someone see WHAT they're about to join before joining — used by the
+// QR/link join page ("Join 🔥 Goa Gang? 5 members") so scanning a code
+// never silently adds you to a squad. Authenticated like every other squad
+// route; the invite code is the only secret needed, same as joinSquad.
+export async function previewSquad(req, res, next) {
+  try {
+    const code = (req.params.code || '').trim().toUpperCase();
+    if (!code) throw new ApiError(400, 'Invite code required');
+    const squad = (await query(`SELECT id, name, emoji FROM squads WHERE invite_code = $1`, [code])).rows[0];
+    if (!squad) throw new ApiError(404, 'Ye invite code valid nahi hai');
+    const count = (await query(
+      `SELECT COUNT(*)::int AS c FROM squad_members WHERE squad_id=$1 AND status='active'`, [squad.id])).rows[0].c;
+    const mine = (await query(
+      `SELECT 1 FROM squad_members WHERE squad_id=$1 AND user_id=$2 AND status='active'`, [squad.id, req.user.id])).rows[0];
+    res.json({ success: true, squad: { id: squad.id, name: squad.name, emoji: squad.emoji, memberCount: count, alreadyMember: !!mine } });
+  } catch (err) { next(err); }
+}
+
 export async function mySquads(req, res, next) {
   try {
     const { rows } = await query(

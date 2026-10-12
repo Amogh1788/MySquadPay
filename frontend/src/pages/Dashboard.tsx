@@ -11,6 +11,7 @@ import { NotificationBell, NotificationPermissionPrompt } from '../components/No
 import { play, initSound } from '../lib/sound';
 import ProfileModal from '../components/ProfileModal';
 import GlobalNav from '../components/GlobalNav';
+import { PENDING_JOIN_KEY } from './JoinPage';
 
 interface Squad { id: string; name: string; emoji: string; invite_code: string; member_count: string; total_spend: string }
 
@@ -26,6 +27,12 @@ export default function Dashboard() {
 
   const load = () => api<{ squads: Squad[] }>('/squads').then((d) => setSquads(d.squads));
   useEffect(() => { load(); }, []);
+  // Someone scanned an invite QR while logged out: JoinPage parked the code,
+  // they signed in / registered, and landed here — send them back to confirm.
+  useEffect(() => {
+    const pending = sessionStorage.getItem(PENDING_JOIN_KEY);
+    if (pending) { sessionStorage.removeItem(PENDING_JOIN_KEY); nav(`/join/${pending}`, { replace: true }); }
+  }, []);
   useEffect(() => {
     const action = searchParams.get('action');
     if (action === 'create' || action === 'join') {

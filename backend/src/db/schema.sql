@@ -305,6 +305,59 @@ CREATE TABLE contributions (
 );
 
 -- ------------------------------------------------------------
+-- NOTE (v6.10): payment_orders / payment_events are defined here, BEFORE
+-- treasury_transactions, because treasury_transactions.payment_order_id
+-- references payment_orders(id). They used to sit at the bottom of this
+-- file, which made CREATE TABLE treasury_transactions fail on a brand-new
+-- database ("relation payment_orders does not exist"). Existing databases
+-- were unaffected — they get these via scripts/setup-db.js, in order.
+-- ------------------------------------------------------------
+-- 24. PAYMENT_ORDERS — v6.7: one row per "Pay ₹X to Treasury"
+-- attempt, created BEFORE the user ever sees a checkout screen.
+-- provider_order_id is UNIQUE — this is the idempotency anchor for
+-- the whole payment flow. Status only ever moves forward
+-- (created -> attempted -> paid/failed/cancelled); "paid" is set
+-- ONLY by the webhook handler after signature verification, never
+-- by anything the frontend reports.
+-- ------------------------------------------------------------
+CREATE TABLE payment_orders (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  squad_id          UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
+  user_id           UUID NOT NULL REFERENCES users(id),
+  purpose           TEXT NOT NULL DEFAULT 'treasury_contribution',
+  amount            BIGINT NOT NULL CHECK (amount > 0),   -- PAISE, validated server-side at creation
+  currency          TEXT NOT NULL DEFAULT 'INR',
+  provider          TEXT NOT NULL DEFAULT 'razorpay',
+  provider_order_id TEXT NOT NULL UNIQUE,
+  status            TEXT NOT NULL DEFAULT 'created'
+                    CHECK (status IN ('created','attempted','paid','failed','cancelled')),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ------------------------------------------------------------
+-- 25. PAYMENT_EVENTS — immutable webhook audit log. Every webhook
+-- delivery gets a row here BEFORE any processing happens, keyed on
+-- provider_event_id UNIQUE — a duplicate webhook delivery (which
+-- payment providers do on purpose, as a reliability guarantee) hits
+-- this constraint and is skipped, so a payment can never be credited
+-- twice from a re-sent webhook. This table is never updated or
+-- deleted — it's the audit trail proving what the provider actually
+-- told us and when.
+-- ------------------------------------------------------------
+CREATE TABLE payment_events (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider           TEXT NOT NULL,
+  provider_event_id  TEXT NOT NULL,
+  event_type         TEXT NOT NULL,
+  payment_order_id   UUID REFERENCES payment_orders(id),
+  payload            JSONB NOT NULL,
+  processed_at       TIMESTAMPTZ,
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (provider, provider_event_id)
+);
+
+-- ------------------------------------------------------------
 -- 18. TREASURY_TRANSACTIONS — every debit/credit on the treasury
 -- type: 'deposit' (member contributes) | 'expense' (spent on an
 -- expense) | 'refund' | 'reversal' (an expense that spent from
@@ -401,52 +454,6 @@ CREATE TABLE recurring_expenses (
   active        BOOLEAN NOT NULL DEFAULT TRUE,
   created_by    UUID NOT NULL REFERENCES users(id),
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- ------------------------------------------------------------
--- 24. PAYMENT_ORDERS — v6.7: one row per "Pay ₹X to Treasury"
--- attempt, created BEFORE the user ever sees a checkout screen.
--- provider_order_id is UNIQUE — this is the idempotency anchor for
--- the whole payment flow. Status only ever moves forward
--- (created -> attempted -> paid/failed/cancelled); "paid" is set
--- ONLY by the webhook handler after signature verification, never
--- by anything the frontend reports.
--- ------------------------------------------------------------
-CREATE TABLE payment_orders (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  squad_id          UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
-  user_id           UUID NOT NULL REFERENCES users(id),
-  purpose           TEXT NOT NULL DEFAULT 'treasury_contribution',
-  amount            BIGINT NOT NULL CHECK (amount > 0),   -- PAISE, validated server-side at creation
-  currency          TEXT NOT NULL DEFAULT 'INR',
-  provider          TEXT NOT NULL DEFAULT 'razorpay',
-  provider_order_id TEXT NOT NULL UNIQUE,
-  status            TEXT NOT NULL DEFAULT 'created'
-                    CHECK (status IN ('created','attempted','paid','failed','cancelled')),
-  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- ------------------------------------------------------------
--- 25. PAYMENT_EVENTS — immutable webhook audit log. Every webhook
--- delivery gets a row here BEFORE any processing happens, keyed on
--- provider_event_id UNIQUE — a duplicate webhook delivery (which
--- payment providers do on purpose, as a reliability guarantee) hits
--- this constraint and is skipped, so a payment can never be credited
--- twice from a re-sent webhook. This table is never updated or
--- deleted — it's the audit trail proving what the provider actually
--- told us and when.
--- ------------------------------------------------------------
-CREATE TABLE payment_events (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  provider           TEXT NOT NULL,
-  provider_event_id  TEXT NOT NULL,
-  event_type         TEXT NOT NULL,
-  payment_order_id   UUID REFERENCES payment_orders(id),
-  payload            JSONB NOT NULL,
-  processed_at       TIMESTAMPTZ,
-  created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (provider, provider_event_id)
 );
 
 -- ------------------------------------------------------------

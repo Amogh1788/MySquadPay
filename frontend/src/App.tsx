@@ -18,6 +18,7 @@ const Wrapped = lazy(() => import('./pages/Wrapped'));
 const TreasuryPage = lazy(() => import('./pages/TreasuryPage'));
 const TripsPage = lazy(() => import('./pages/TripsPage'));
 const TripDetailPage = lazy(() => import('./pages/TripDetailPage'));
+const JoinPage = lazy(() => import('./pages/JoinPage'));
 
 // Subtle fade-in on every page navigation — before this, pages just popped
 // in abruptly. Deliberately opacity-ONLY (no y/scale): a CSS transform on
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="/" element={<Page><Landing /></Page>} />
         <Route path="/login" element={<Page><Login /></Page>} />
         <Route path="/register" element={<Page><Register /></Page>} />
+        <Route path="/join/:code" element={<Page><JoinPage /></Page>} />
         <Route path="/app" element={<Protected><Page><Dashboard /></Page></Protected>} />
         <Route path="/app/squad/:id" element={<Protected><Page><SquadPage /></Page></Protected>} />
         <Route path="/app/squad/:id/wrapped" element={<Protected><Page><Wrapped /></Page></Protected>} />

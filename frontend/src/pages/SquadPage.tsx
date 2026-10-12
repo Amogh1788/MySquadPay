@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Plus, Copy, Check, Receipt, Handshake, Users as UsersIcon,
          Activity, Trash2, ChevronDown, Clock, BadgeCheck, XCircle,
-         Trophy, RefreshCw, Play, Camera, BarChart2, Download, MoreVertical, LogOut, Pencil } from 'lucide-react';
+         Trophy, RefreshCw, Play, Camera, BarChart2, Download, MoreVertical, LogOut, Pencil, QrCode } from 'lucide-react';
 import { api, BASE } from '../lib/api';
 import { toRupees, toPaise, timeAgo } from '../lib/money';
 import { useAuth } from '../store/auth';
@@ -15,6 +15,7 @@ import MemberSheet from '../components/MemberSheet';
 import AddExpenseModal from '../components/AddExpenseModal';
 import { NotificationBell } from '../components/NotificationBell';
 import { rememberLastSquad } from '../components/GlobalNav';
+import InviteQR from '../components/InviteQR';
 
 interface Member { id: string; name: string; avatar_url?: string; upi_id?: string; role: string; xp: number; level: number; level_title: string }
 interface Balance { userId: string; name: string; avatarUrl?: string; net: number; totalPaid: number; totalShare: number }
@@ -55,6 +56,7 @@ export default function SquadPage() {
   const [confetti, setConfetti] = useState(false);
   const [toast, setToast] = useState<string|null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteTypedName, setDeleteTypedName] = useState('');
@@ -240,6 +242,11 @@ export default function SquadPage() {
                       style={{ color:'var(--color-bone)', borderBottom:'1px solid rgba(var(--rt-bone-rgb),0.1)' }}>
                       <Copy className="h-4 w-4" /> Copy Invite Code
                     </button>
+                    <button onClick={() => { setShowQR(true); setShowMenu(false); }}
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold"
+                      style={{ color:'var(--color-bone)', borderBottom:'1px solid rgba(var(--rt-bone-rgb),0.1)' }}>
+                      <QrCode className="h-4 w-4" /> Invite QR
+                    </button>
                     <button onClick={() => { exportStatement(); setShowMenu(false); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold"
                       style={{ color:'var(--color-bone)', borderBottom:'1px solid rgba(var(--rt-bone-rgb),0.1)' }}>
@@ -387,10 +394,12 @@ export default function SquadPage() {
         } : null}
         onCreated={() => { setShowAdd(false); setEditingExpense(null); expenseToast(); load(); }} />
 
+      <InviteQR open={showQR} onClose={() => setShowQR(false)} code={squad.invite_code} squadName={squad.name} />
+
       <Modal open={confirmLeave} onClose={() => { if (!actionLoading) { setConfirmLeave(false); setActionError(''); } }} title="Squad chhodna hai?">
         <p className="text-sm mb-4" style={{ color:'rgba(var(--rt-bone-rgb),0.7)' }}>
           Tum <strong style={{ color:'var(--color-bone)' }}>{squad.emoji} {squad.name}</strong> chhodne wale ho. Dobara join karne ke liye
-          tumhe naya invite code chahiye hoga.
+          tumhe invite code ya QR dobara chahiye hoga.
         </p>
         <ErrorText msg={actionError} />
         <div className="flex gap-2 mt-4">
