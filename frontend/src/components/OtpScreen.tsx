@@ -55,6 +55,7 @@ export default function OtpScreen({
   };
 
   const submit = async () => {
+  if (busy) return;
     if (code.length !== 6) { setError('Pura 6-digit code daalo'); return; }
     setError(''); setBusy(true);
     try { await onSubmit(code); }
@@ -88,49 +89,64 @@ export default function OtpScreen({
         </p>
       </div>
 
-      <div className="flex justify-center gap-2 mb-5" onPaste={handlePaste}>
-        {digits.map((d, i) => (
-          <input
-            key={i}
-            ref={(el) => { inputsRef.current[i] = el; }}
-            type="text"
-            inputMode="numeric"
-            maxLength={1}
-            value={d}
-            onChange={(e) => setDigit(i, e.target.value)}
-            onKeyDown={(e) => handleKeyDown(i, e)}
-            className="h-12 w-10 rounded-xl text-center text-lg font-extrabold outline-none transition sm:h-14 sm:w-12"
-            style={{
-              background: 'var(--color-ink-900)', color: 'var(--color-bone)',
-              border: `2px solid ${error ? 'var(--color-hot-pink)' : d ? 'var(--color-marigold)' : 'rgba(var(--rt-bone-rgb),0.15)'}`,
-            }}
-          />
-        ))}
-      </div>
+      <form
+  onSubmit={(e) => {
+    e.preventDefault();
+    void submit();
+  }}
+>
+  <div className="flex justify-center gap-2 mb-5" onPaste={handlePaste}>
+    {digits.map((d, i) => (
+      <input
+        key={i}
+        ref={(el) => { inputsRef.current[i] = el; }}
+        type="text"
+        inputMode="numeric"
+        autoComplete={i === 0 ? 'one-time-code' : 'off'}
+        maxLength={1}
+        value={d}
+        onChange={(e) => setDigit(i, e.target.value)}
+        onKeyDown={(e) => handleKeyDown(i, e)}
+        className="h-12 w-10 rounded-xl text-center text-lg font-extrabold outline-none transition sm:h-14 sm:w-12"
+        style={{
+          background: 'var(--color-ink-900)',
+          color: 'var(--color-bone)',
+          border: `2px solid ${
+            error
+              ? 'var(--color-hot-pink)'
+              : d
+                ? 'var(--color-marigold)'
+                : 'rgba(var(--rt-bone-rgb),0.15)'
+          }`,
+        }}
+      />
+    ))}
+  </div>
 
-      {error && (
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-xs font-semibold mb-4" style={{ color: 'var(--color-hot-pink)' }}>
-          {error}
-        </motion.p>
-      )}
+  {error && (
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="text-center text-xs font-semibold mb-4"
+      style={{ color: 'var(--color-hot-pink)' }}
+    >
+      {error}
+    </motion.p>
+  )}
 
-      <button onClick={submit} disabled={busy || code.length !== 6}
-        className="w-full rounded-xl py-3.5 font-display font-extrabold text-sm transition active:scale-[0.98] disabled:opacity-50"
-        style={{ background: 'var(--color-marigold)', color: 'var(--color-ink-950)', border: '2px solid rgba(0,0,0,0.2)' }}>
-        {busy ? 'Verify ho raha hai...' : 'Verify karo →'}
-      </button>
-
-      <div className="mt-4 text-center">
-        {cooldown > 0 ? (
-          <p className="text-xs" style={{ color: 'rgba(var(--rt-bone-rgb),0.4)' }}>
-            Naya code <b style={{ color: 'rgba(var(--rt-bone-rgb),0.6)' }}>{cooldown}s</b> mein bhej sakte ho
-          </p>
-        ) : (
-          <button onClick={resend} disabled={resending} className="inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--color-marigold)' }}>
-            <RefreshCw size={12} className={resending ? 'animate-spin' : ''} /> {resending ? 'Bhej rahe hain...' : 'Code dobara bhejo'}
-          </button>
-        )}
-      </div>
+  <button
+    type="submit"
+    disabled={busy || code.length !== 6}
+    className="w-full rounded-xl py-3.5 font-display font-extrabold text-sm transition active:scale-[0.98] disabled:opacity-50"
+    style={{
+      background: 'var(--color-marigold)',
+      color: 'var(--color-ink-950)',
+      border: '2px solid rgba(0,0,0,0.2)',
+    }}
+  >
+    {busy ? 'Verify ho raha hai...' : 'Verify karo →'}
+  </button>
+      </form>
     </motion.div>
   );
 }

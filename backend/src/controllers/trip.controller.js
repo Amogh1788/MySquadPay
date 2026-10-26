@@ -40,10 +40,19 @@ export async function createTrip(req, res, next) {
       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *
     `,[squadId, name.trim(), emoji||'🧳', startDate||null, endDate||null, budget||null, req.user.id]);
 
-    await query(
-      `INSERT INTO activity_log (squad_id,user_id,action,metadata) VALUES ($1,$2,'trip.created',$3)`,
-      [squadId, req.user.id, JSON.stringify({ name: rows[0].name, emoji: rows[0].emoji })]
-    );
+    
+await query(
+  `INSERT INTO activity_log (squad_id, user_id, action, metadata)
+   VALUES ($1, $2, 'trip.created', $3)`,
+  [
+    squadId,
+    req.user.id,
+    JSON.stringify({
+      name: rows[0].name,
+      emoji: rows[0].emoji,
+    }),
+  ]
+);
 
     res.status(201).json({ success:true, trip: rows[0] });
   } catch(err) { next(err); }

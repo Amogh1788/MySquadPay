@@ -241,16 +241,35 @@ try {
           </div>
         </motion.div>
 
-        {/* TABS */}
-        <div className="flex gap-1 rounded-2xl p-1 mb-5" style={{ background:'rgba(var(--rt-bone-rgb),0.05)', border:'2px solid rgba(var(--rt-bone-rgb),0.1)' }}>
-          {TABS.map(([t,label,Icon]) => (
-            <button key={t} onClick={() => setTab(t as any)}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-bold transition"
-              style={{ background: tab===t?'var(--color-marigold)':'transparent', color: tab===t?'var(--color-ink-950)':'rgba(var(--rt-bone-rgb),0.55)' }}>
-              <Icon className="h-3.5 w-3.5" />{label}
-            </button>
-          ))}
-        </div>
+    {/* TABS */}
+    <div
+      className="mb-5 flex gap-1 overflow-x-auto rounded-2xl p-1"
+      style={{
+        background: 'rgba(var(--rt-bone-rgb),0.05)',
+        border: '2px solid rgba(var(--rt-bone-rgb),0.1)',
+        scrollbarWidth: 'none',
+      }}
+    >
+      {TABS.map(([t, label, Icon]) => (
+        <button
+          key={t}
+          onClick={() => setTab(t as any)}
+          className="flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold transition"
+          style={{
+            background:
+              tab === t ? 'var(--color-marigold)' : 'transparent',
+            color:
+              tab === t
+                ? 'var(--color-ink-950)'
+                : 'rgba(var(--rt-bone-rgb),0.55)',
+          }}
+        >
+          <Icon className="h-3.5 w-3.5" />
+          {label}
+        </button>
+      ))}
+    </div>
+
 
         <AnimatePresence mode="wait">
           <motion.div key={tab} initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}>

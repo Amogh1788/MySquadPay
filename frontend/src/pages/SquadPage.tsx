@@ -223,7 +223,7 @@ export default function SquadPage() {
                 <>
                   <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
                     className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                  <motion.div initial={{opacity:0,y:-8,scale:0.96}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-8,scale:0.96}}
+                  <motion.div initial={false} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -4 }}
                     transition={{type:'spring',damping:25,stiffness:300}}
                     className="absolute right-0 top-12 z-50 w-56 rounded-2xl overflow-hidden"
                     style={{ background:'var(--color-ink-900)', border:'2px solid #f5f0e8', boxShadow:'0 8px 30px rgba(0,0,0,0.4)' }}>
@@ -450,10 +450,13 @@ function Overview({ activity, balances, expenses, onMemberClick, squadId }: { ac
     ].filter(Boolean) as string[];
     return facts[Math.floor(Date.now() / 60000) % facts.length];
   }, [expenses, totalSpend]);
-  const verbs: Record<string,string> = {
-    'expense.created':'ne kharcha add kiya','settlement.completed':'ne settle kiya 🤝',
-    'squad.created':'ne squad banaya 🎉','member.joined':'squad mein aaya 👋',
-  };
+  const verbs: Record<string, string> = {
+  'expense.created': 'ne kharcha add kiya',
+  'settlement.completed': 'ne settle kiya 🤝',
+  'squad.created': 'ne squad banaya 🎉',
+  'member.joined': 'squad mein aaya 👋',
+  'trip.created': 'created a trip 🧳',
+};
   return (
     <div className="space-y-4">
       {/* Treasury quick-access */}
