@@ -34,12 +34,28 @@ export default function OtpScreen({
   const code = digits.join('');
 
   const setDigit = (i: number, val: string) => {
-    const clean = val.replace(/\D/g, '').slice(-1);
-    const next = [...digits];
-    next[i] = clean;
+  const clean = val.replace(/\D/g, '');
+
+  // Handle automatic 6-digit OTP autofill
+  if (clean.length > 1) {
+    const next = Array(6).fill('');
+    clean.slice(0, 6).split('').forEach((digit, index) => {
+      next[index] = digit;
+    });
+
     setDigits(next);
-    if (clean && i < 5) inputsRef.current[i + 1]?.focus();
-  };
+    inputsRef.current[Math.min(clean.length, 6) - 1]?.focus();
+    return;
+  }
+
+  const next = [...digits];
+  next[i] = clean.slice(-1);
+  setDigits(next);
+
+  if (clean && i < 5) {
+    inputsRef.current[i + 1]?.focus();
+  }
+};
 
   const handlePaste = (e: React.ClipboardEvent) => {
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
@@ -103,7 +119,7 @@ export default function OtpScreen({
         type="text"
         inputMode="numeric"
         autoComplete={i === 0 ? 'one-time-code' : 'off'}
-        maxLength={1}
+        maxLength={i === 0 ? 6 : 1}
         value={d}
         onChange={(e) => setDigit(i, e.target.value)}
         onKeyDown={(e) => handleKeyDown(i, e)}
@@ -147,6 +163,24 @@ export default function OtpScreen({
     {busy ? 'Verify ho raha hai...' : 'Verify karo →'}
   </button>
       </form>
+            <div className="mt-4 text-center">
+        {cooldown > 0 ? (
+          <p className="text-xs" style={{ color: 'rgba(var(--rt-bone-rgb),0.4)' }}>
+            Naya code <b style={{ color: 'rgba(var(--rt-bone-rgb),0.6)' }}>{cooldown}s</b> mein bhej sakte ho
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={resend}
+            disabled={resending}
+            className="inline-flex items-center gap-1.5 text-xs font-bold"
+            style={{ color: 'var(--color-marigold)' }}
+          >
+            <RefreshCw size={12} className={resending ? 'animate-spin' : ''} />
+            {resending ? 'Bhej rahe hain...' : 'Code dobara bhejo'}
+          </button>
+        )}
+      </div>
     </motion.div>
   );
 }
