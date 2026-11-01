@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@layer components {
+  .bbtn {
+    display: inline-flex;
+  }
+}
 
 /* ============================================================
    SQUADPAY v3 — DESI NEO-BRUTALIST DESIGN SYSTEM
@@ -102,7 +107,7 @@ body {
 
 /* ---- BRUTALIST BUTTON ---- */
 .bbtn {
-  display: inline-flex; align-items: center; gap: 0.4rem;
+  align-items: center; gap: 0.4rem;
   font-family: var(--font-display); font-weight: 700;
   border: 2px solid var(--color-bone); border-radius: 0.75rem;
   padding: 0.6rem 1.25rem; font-size: 0.875rem;

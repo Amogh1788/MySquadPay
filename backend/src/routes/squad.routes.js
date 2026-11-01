@@ -1,6 +1,17 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
-import { createSquad, joinSquad, mySquads, squadDetail, memberProfile, setMemberUpi, leaveSquad, deleteSquad, previewSquad } from '../controllers/squad.controller.js';
+import {
+  createSquad,
+  joinSquad,
+  mySquads,
+  squadDetail,
+  memberProfile,
+  setMemberUpi,
+  leaveSquad,
+  deleteSquad,
+  previewSquad,
+  renameSquad,
+} from '../controllers/squad.controller.js';
 
 const r = Router();
 r.use(requireAuth);
@@ -12,6 +23,7 @@ r.get('/preview/:code', previewSquad);
 r.get('/:id/member/:userId', memberProfile);
 r.patch('/:id/member/:userId/upi', setMemberUpi);
 r.post('/:id/leave', leaveSquad);
+r.patch('/:id/name', renameSquad);
 r.delete('/:id', deleteSquad);
 r.get('/:id', squadDetail);
 export default r;
