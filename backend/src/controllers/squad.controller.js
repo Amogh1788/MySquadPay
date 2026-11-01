@@ -277,6 +277,41 @@ export async function leaveSquad(req, res, next) {
   finally { client.release(); }
 }
 
+// Creator-only squad rename
+export async function renameSquad(req, res, next) {
+  try {
+    const { id: squadId } = req.params;
+    const newName = typeof req.body?.name === 'string'
+      ? req.body.name.trim()
+      : '';
+
+    if (!newName) {
+      throw new ApiError(400, 'Squad name required');
+    }
+
+    const squad = (await query(
+      `SELECT created_by FROM squads WHERE id=$1`,
+      [squadId]
+    )).rows[0];
+
+    if (!squad) throw new ApiError(404, 'Squad not found');
+
+    if (String(squad.created_by) !== String(req.user.id)) {
+      throw new ApiError(403, 'Sirf squad creator naam change kar sakta hai');
+    }
+
+    const updated = (await query(
+      `UPDATE squads SET name=$1 WHERE id=$2
+       RETURNING id, name, emoji`,
+      [newName, squadId]
+    )).rows[0];
+
+    res.json({ success: true, squad: updated });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // Admin-only, permanent. Squads have no soft-delete column (unlike expenses),
 // and every dependent table (squad_members, expenses, trips, photos,
 // treasury, contributions, treasury_transactions, settlements,

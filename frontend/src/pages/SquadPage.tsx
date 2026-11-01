@@ -23,8 +23,20 @@ interface Suggestion { from: { userId: string; name: string }; to: { userId: str
 interface Pending { id: string; from_user: string; to_user: string; amount: string; method: string; created_at: string; from_name: string; to_name: string }
 interface Settlement { id: string; from_name: string; to_name: string; amount: string; method: string; status: string; created_at: string }
 interface Expense { id: string; title: string; amount: string; category: string; paid_by: string; paid_by_name: string; expense_date: string; created_by: string; split_type: string; treasury_amount?: string; trip_id?: string | null; participants: { userId: string; name: string; shareAmount: number; shareValue?: number | null }[] }
-interface Detail { squad: { id: string; name: string; emoji: string; invite_code: string }; members: Member[]; balances: Balance[]; suggestions: Suggestion[]; pendingSettlements: Pending[]; activity: { action: string; metadata: any; created_at: string; name: string }[] }
-
+interface Detail {
+  squad: {
+    id: string;
+    name: string;
+    emoji: string;
+    invite_code: string;
+    created_by: string;
+  };
+  members: Member[];
+  balances: Balance[];
+  suggestions: Suggestion[];
+  pendingSettlements: Pending[];
+  activity: { action: string; metadata: any; created_at: string; name: string }[];
+}
 const CATS = ['food','travel','movies','fuel','events','shopping','stay','other'] as const;
 const CE: Record<string,string> = { food:'🍕',travel:'🚕',movies:'🎬',fuel:'⛽',events:'🎉',shopping:'🛍️',stay:'🏨',other:'📦' };
 const PAY_METHODS = [
@@ -57,6 +69,8 @@ export default function SquadPage() {
   const [toast, setToast] = useState<string|null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [showRename, setShowRename] = useState(false);
+  const [renameName, setRenameName] = useState('');
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteTypedName, setDeleteTypedName] = useState('');
@@ -174,6 +188,39 @@ export default function SquadPage() {
   const myBalance = balances.find((b) => b.userId === user?.id);
   const actionNeeded = pendingSettlements.filter((p) => p.to_user === user?.id).length;
   const isAdmin = members.find((m) => m.id === user?.id)?.role === 'admin';
+  const isCreator = String(squad.created_by) === String(user?.id);
+
+const handleRenameSquad = async () => {
+  const newName = renameName.trim();
+
+  if (!newName) {
+    setActionError('Squad name required');
+    return;
+  }
+
+  setActionLoading(true);
+  setActionError('');
+
+  try {
+    await api(`/squads/${id}/name`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name: newName }),
+    });
+
+    setDetail((prev) =>
+      prev
+        ? { ...prev, squad: { ...prev.squad, name: newName } }
+        : prev
+    );
+
+    setShowRename(false);
+    popToast('Squad renamed successfully! ✨');
+  } catch (e: any) {
+    setActionError(e.message || 'Rename nahi ho paya');
+  } finally {
+    setActionLoading(false);
+  }
+};
 
   const TABS = [
     ['overview','Overview',Activity,0],['expenses','Kharchey',Receipt,0],
@@ -252,6 +299,23 @@ export default function SquadPage() {
                       style={{ color:'var(--color-bone)', borderBottom:'1px solid rgba(var(--rt-bone-rgb),0.1)' }}>
                       <Download className="h-4 w-4" /> Export Statement (CSV)
                     </button>
+                    {isCreator && (
+                                    <button
+                                      onClick={() => {
+                                        setShowMenu(false);
+                                        setRenameName(squad.name);
+                                        setActionError('');
+                                        setShowRename(true);
+                                      }}
+                                      className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold"
+                                      style={{
+                                        color: 'var(--color-bone)',
+                                        borderBottom: '1px solid rgba(var(--rt-bone-rgb),0.1)',
+                                      }}
+                                    >
+                                      <Pencil className="h-4 w-4" /> Rename Squad
+                                    </button>
+                                  )}
                     <button onClick={() => { setShowMenu(false); setActionError(''); setConfirmLeave(true); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-bold"
                       style={{ color:'var(--color-bone)', borderBottom: isAdmin ? '1px solid rgba(var(--rt-bone-rgb),0.1)' : 'none' }}>
@@ -395,6 +459,53 @@ export default function SquadPage() {
         onCreated={() => { setShowAdd(false); setEditingExpense(null); expenseToast(); load(); }} />
 
       <InviteQR open={showQR} onClose={() => setShowQR(false)} code={squad.invite_code} squadName={squad.name} />
+        <Modal
+  open={showRename}
+  onClose={() => {
+    if (!actionLoading) {
+      setShowRename(false);
+      setActionError('');
+    }
+  }}
+  title="✏️ Rename Squad"
+>
+  <div className="space-y-3">
+    <Input
+      label="New squad name"
+      placeholder="Enter squad name"
+      value={renameName}
+      onChange={(e: any) => setRenameName(e.target.value)}
+    />
+
+    <ErrorText msg={actionError} />
+
+    <div className="flex gap-2 mt-4">
+      <Button
+        variant="ghost"
+        className="flex-1"
+        onClick={() => {
+          setShowRename(false);
+          setActionError('');
+        }}
+        disabled={actionLoading}
+      >
+        Cancel
+      </Button>
+
+      <Button
+        className="flex-1 justify-center"
+        onClick={handleRenameSquad}
+        disabled={
+          actionLoading ||
+          !renameName.trim() ||
+          renameName.trim() === squad.name
+        }
+      >
+        {actionLoading ? 'Saving...' : 'Save Changes'}
+      </Button>
+    </div>
+  </div>
+</Modal>
 
       <Modal open={confirmLeave} onClose={() => { if (!actionLoading) { setConfirmLeave(false); setActionError(''); } }} title="Squad chhodna hai?">
         <p className="text-sm mb-4" style={{ color:'rgba(var(--rt-bone-rgb),0.7)' }}>

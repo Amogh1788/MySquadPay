@@ -28,6 +28,7 @@ export default function Memories({ squadId, isAdmin }: { squadId: string; isAdmi
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [hasUploadedMemory, setHasUploadedMemory] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = () => api<{ memories: Memory[] }>(`/memories/squad/${squadId}`).then((d) => setMemories(d.memories));
@@ -47,6 +48,7 @@ export default function Memories({ squadId, isAdmin }: { squadId: string; isAdmi
       const fd = new FormData();
       fd.append('squadId', squadId); fd.append('caption', caption); fd.append('photo', file);
       await apiUpload('/memories', fd);
+      setHasUploadedMemory(true);
       play('success');
       setCaption(''); pickFile(null); if (fileRef.current) fileRef.current.value = '';
       load();
@@ -72,16 +74,37 @@ export default function Memories({ squadId, isAdmin }: { squadId: string; isAdmi
       <div className="bcard bcard-yellow p-4">
         <form onSubmit={upload} className="space-y-3">
           {preview && (
-            <div className="relative">
-              <img src={preview} alt="preview" className="h-40 w-full rounded-xl object-cover" style={{ border: '2px solid rgba(245,166,35,0.4)' }} />
-              <button type="button" onClick={() => pickFile(null)} className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white">✕</button>
-            </div>
-          )}
+  <div className="flex w-full justify-center">
+    <div className="relative inline-flex max-w-full">
+      <img
+        src={preview}
+        alt="Memory preview"
+        className="max-h-80 max-w-full rounded-xl object-contain"
+        style={{ border: '2px solid rgba(245,166,35,0.4)' }}
+      />
+      <button
+        type="button"
+        onClick={() => pickFile(null)}
+        className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white"
+      >
+        ✕
+      </button>
+    </div>
+  </div>
+)}
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => fileRef.current?.click()}
-              className={`flex items-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition active:scale-95 ${file ? 'border-marigold text-marigold' : 'border-bone/20 bg-ink-800 text-bone/60'}`}>
-              <Camera className="h-4 w-4" /> {file ? file.name.slice(0, 18) + (file.name.length > 18 ? '…' : '') : 'Photo choose karo'}
-            </button>
+            <button
+  type="button"
+  onClick={() => fileRef.current?.click()}
+  className={`flex items-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition active:scale-95 ${
+    file
+      ? 'border-marigold text-marigold'
+      : 'border-bone/20 bg-ink-800 text-bone/60'
+  }`}
+>
+  <Camera className="h-4 w-4" />
+  {!file && <span>Photo choose karo</span>}
+</button>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickFile(e.target.files?.[0] || null)} />
             <input value={caption} onChange={(e) => setCaption(e.target.value)}
               placeholder='"Rahul ne bola budget outing hogi 💀"'
@@ -144,7 +167,7 @@ function MemoryCard({ m, meId, isAdmin, onReact, onDelete, onChanged }: {
           </div>
         )}
         <img src={assetUrl(m.url)} alt={m.caption || 'memory'} loading="lazy" decoding="async" onLoad={() => setImgLoaded(true)}
-          className={`aspect-square w-full object-cover transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`} />
+          className={`max-h-[500px] w-full object-contain transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`} />
         {(m.uploaded_by === meId || isAdmin) && (
           <button onClick={() => onDelete(m.id)}
             className="absolute right-2 top-2 rounded-full p-1.5 text-white transition active:scale-90"
