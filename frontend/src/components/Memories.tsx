@@ -28,7 +28,6 @@ export default function Memories({ squadId, isAdmin }: { squadId: string; isAdmi
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [hasUploadedMemory, setHasUploadedMemory] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = () => api<{ memories: Memory[] }>(`/memories/squad/${squadId}`).then((d) => setMemories(d.memories));
@@ -48,7 +47,6 @@ export default function Memories({ squadId, isAdmin }: { squadId: string; isAdmi
       const fd = new FormData();
       fd.append('squadId', squadId); fd.append('caption', caption); fd.append('photo', file);
       await apiUpload('/memories', fd);
-      setHasUploadedMemory(true);
       play('success');
       setCaption(''); pickFile(null); if (fileRef.current) fileRef.current.value = '';
       load();
